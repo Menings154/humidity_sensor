@@ -28,10 +28,38 @@ with open(
         temperature.append(t)
         humidity.append(h)
 
+# create plot layout and plot data from file
 fig, [ax1, ax2] = plt.subplots(nrows=2)
-ax1.set_yaxis('Temperature (°C)')
-ax2.set_yaxis('Humidity (%)')
-ax2.set_xaxis('Datetime')
+ax1.set_ylabel('Temperature (°C)')
+ax2.set_ylabel('Humidity (%)')
+ax2.set_xlabel('Datetime')
 ax1.plot(datetime_values, temperature, color='red')
 ax2.plot(datetime_values, humidity, color='blue')
+
+# analog timestemps 
+showerstart = datetime.datetime(year=2021, month=12, day=14, hour=20-1, minute=49)
+shower_fenster_open = datetime.datetime(year=2021, month=12, day=14, hour=20-1, minute=58)
+shower_fenster_closed = datetime.datetime(year=2021, month=12, day=14, hour=21-1, minute=29)
+
+fenster_open = datetime.datetime(year=2021, month=12, day=15, hour=10-1, minute=0)
+fenster_closed = datetime.datetime(year=2021, month=12, day=15, hour=10-1, minute=23)
+
+# include analog data in plot
+for value in [showerstart, shower_fenster_open, shower_fenster_closed,]:
+    ax1.vlines(value, ymin=17, ymax=22, color='black')
+    ax2.vlines(value, ymin=50, ymax=100, color='black')
+
+for value in [fenster_open, fenster_closed]:
+    ax1.vlines(value, ymin=17, ymax=22, color='black', linestyle='--')
+    ax2.vlines(value, ymin=50, ymax=100, color='black', linestyle='--')
+
+
+
+# Test, ob man in Ableitung mehr erkennen kann
+
+fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
+
+ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
+ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
+
 plt.show(block=True)
