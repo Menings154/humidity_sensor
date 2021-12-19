@@ -13,22 +13,43 @@ def read_data_from_line(line):
     return datetimestemp, temperature, humidity
 
 
+def deciding_function(temperature, humidity):
+    """
+    Decide if window is open or not.
+    
+    Differ between Duschen und Geruch through ?
+    """
+    
+
 datetime_values = []
 temperature = []  # (°C)
 humidity = []  # (%)
 
 # read the date and time as well as temperature and humidity
-with open(
-    r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder.csv",
-    "r",
-) as file:
-    for line in file:
-        d, t, h = read_data_from_line(line)
-        datetime_values.append(d)
-        temperature.append(t)
-        humidity.append(h)
+try:
+    with open(
+        r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder.csv",
+        "r",
+    ) as file:
+        for line in file:
+            d, t, h = read_data_from_line(line)
+            datetime_values.append(d)
+            temperature.append(t)
+            humidity.append(h)
+
+except FileNotFoundError:
+    with open(
+        r"/home/menings/Documents/Git/humidity_sensor/test/Test_how_t_and_h_changes/Bad_Fenster_Reminder.csv",
+        "r"
+    ) as file:
+        for line in file:
+            d, t, h = read_data_from_line(line)
+            datetime_values.append(d)
+            temperature.append(t)
+            humidity.append(h)
 
 # create plot layout and plot data from file
+plt.close('all')
 fig, [ax1, ax2] = plt.subplots(nrows=2)
 ax1.set_ylabel('Temperature (°C)')
 ax2.set_ylabel('Humidity (%)')
@@ -57,9 +78,14 @@ for value in [fenster_open, fenster_closed]:
 
 # Test, ob man in Ableitung mehr erkennen kann
 
-fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
+# fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
 
-ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
-ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
+# ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
+# ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
 
+# print(temperature)
+# print(np.diff(temperature))
+
+ax1.hlines(np.mean(temperature), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
+ax2.hlines(np.mean(humidity), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
 plt.show(block=True)
