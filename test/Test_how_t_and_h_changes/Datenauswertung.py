@@ -12,6 +12,43 @@ def read_data_from_line(line):
     datetimestemp = datetime.datetime.combine(datestemp, timestemp)
     return datetimestemp, temperature, humidity
 
+def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_percentage:float):
+    """
+    Prototpye for later logic to detect if window is open or not.
+    
+    Plan:
+        Go through all datapoints, make sliding average with an hour width
+        if temperature diff is larger than a defined percent value detect if window is open
+        look at humidity to detect if it has been showered.
+    """
+    temp_t = []
+    temp_h = []
+
+    window_opened_d = []
+    window_opened_t = []
+    window_opened_h = []
+    
+    shower_d = []
+    shower_t = []
+    shower_h = []
+
+    for count, value in enumerate(list_d):
+        if len(temp_t) >= 60:
+            temp_t.pop(0)
+            temp_h.pop(0)
+        
+        temp_t.append(list_t[count])
+        temp_h.append(list_h[count])
+        if list_t[count] < np.mean(temp_t)*t_percentage:
+            if list_h[count] > np.mean(temp_h)*h_percentage:
+                shower_d.append(value)
+                shower_t.append(list_t[count])
+                shower_h.append(list_h[count])
+            else:
+                window_opened_d.append(value)
+                window_opened_t.append(list_t[count])
+                window_opened_h.append(list_h[count])
+    return (shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h)
 
 datetime_values = []
 temperature = []  # (°C)
@@ -57,9 +94,16 @@ for value in [fenster_open, fenster_closed]:
 
 # Test, ob man in Ableitung mehr erkennen kann
 
-fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
+# fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
 
-ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
-ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
+# ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
+# ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
+
+
+
+shower_d, shower_t, shower_h, window_d, window_t, window_h = window_status(datetime_values, temperature, humidity, 0.9, 1.5)
+
+ax1.scatter(shower_d, shower_t, color='yellow')
+ax1.scatter(window_d, window_t, color='pink')
 
 plt.show(block=True)
