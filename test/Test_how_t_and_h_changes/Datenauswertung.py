@@ -1,6 +1,7 @@
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt
+import math
 
 
 def read_data_from_line(line):
@@ -12,15 +13,17 @@ def read_data_from_line(line):
     datetimestemp = datetime.datetime.combine(datestemp, timestemp)
     return datetimestemp, temperature, humidity
 
-def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_percentage:float):
+def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_percentage:float, time_after_h:float):
     """
     Prototpye for later logic to detect if window is open or not.
     
     Plan:
         Go through all datapoints, make sliding average with an hour width
-        if temperature diff is larger than a defined percent value detect if window is open
-        look at humidity to detect if it has been showered.
+        if humidity rising, look for temperature sinking, then window open because of shower.
+        if temperature diff is larger than a defined percent value without humidity rising, window open only for smell.
     """
+    delta_time = (list_d[1]-list_d[0]).total_seconds()  # time between two measurement points
+
     temp_t = []
     temp_h = []
 
@@ -39,23 +42,24 @@ def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_p
         
         temp_t.append(list_t[count])
         temp_h.append(list_h[count])
-        if list_t[count] < np.mean(temp_t)*t_percentage:
-            if list_h[count] > np.mean(temp_h)*h_percentage:
-                shower_d.append(value)
-                shower_t.append(list_t[count])
-                shower_h.append(list_h[count])
-            else:
-                window_opened_d.append(value)
-                window_opened_t.append(list_t[count])
-                window_opened_h.append(list_h[count])
-    return (shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h)
+        if list_h[count] >= np.mean(temp_h)*h_percentage:  # is humidity rising (indication of showering)
+            for i in range(math.ceil(time_after_h/delta_time)):
+                if list_t[count+i] < np.mean(temp_t)*t_percentage:
+                    shower_d.append(list_d[count+i])
+                    shower_t.append(list_t[count+i])
+                    shower_h.append(list_h[count+i])
+                else:
+                    pass
 
-def deciding_function(temperature, humidity):
-    """
-    Decide if window is open or not.
-    
-    Differ between Duschen und Geruch through ?
-    """
+        else:
+            if list_t[count] < np.mean(temp_t)*t_percentage:
+                if list_d[count] not in shower_d:
+                    window_opened_d.append(value)
+                    window_opened_t.append(list_t[count])
+                    window_opened_h.append(list_h[count])
+
+    return shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h
+
     
 
 datetime_values = []
@@ -112,27 +116,12 @@ for value in [fenster_open, fenster_closed]:
     ax2.vlines(value, ymin=50, ymax=100, color='black', linestyle='--')
 
 
-
-# Test, ob man in Ableitung mehr erkennen kann
-
-# fig_abl, [ax1_abl, ax2_abl] = plt.subplots(nrows=2)
-
-# ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
-# ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
-<<<<<<< HEAD
-
-
-
-shower_d, shower_t, shower_h, window_d, window_t, window_h = window_status(datetime_values, temperature, humidity, 0.9, 1.5)
+shower_d, shower_t, shower_h, window_d, window_t, window_h = window_status(datetime_values, temperature, humidity, 0.9, 1.1, 6000)
 
 ax1.scatter(shower_d, shower_t, color='yellow')
 ax1.scatter(window_d, window_t, color='pink')
-=======
->>>>>>> 4268460e2d4ff3b31e9e9d1ce8b2445493446029
-
-# print(temperature)
-# print(np.diff(temperature))
 
 ax1.hlines(np.mean(temperature), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
 ax2.hlines(np.mean(humidity), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
 plt.show(block=True)
+
