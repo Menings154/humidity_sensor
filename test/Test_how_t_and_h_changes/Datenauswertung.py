@@ -50,22 +50,43 @@ def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_p
                 window_opened_h.append(list_h[count])
     return (shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h)
 
+def deciding_function(temperature, humidity):
+    """
+    Decide if window is open or not.
+    
+    Differ between Duschen und Geruch through ?
+    """
+    
+
 datetime_values = []
 temperature = []  # (°C)
 humidity = []  # (%)
 
 # read the date and time as well as temperature and humidity
-with open(
-    r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder.csv",
-    "r",
-) as file:
-    for line in file:
-        d, t, h = read_data_from_line(line)
-        datetime_values.append(d)
-        temperature.append(t)
-        humidity.append(h)
+try:
+    with open(
+        r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder.csv",
+        "r",
+    ) as file:
+        for line in file:
+            d, t, h = read_data_from_line(line)
+            datetime_values.append(d)
+            temperature.append(t)
+            humidity.append(h)
+
+except FileNotFoundError:
+    with open(
+        r"/home/menings/Documents/Git/humidity_sensor/test/Test_how_t_and_h_changes/Bad_Fenster_Reminder.csv",
+        "r"
+    ) as file:
+        for line in file:
+            d, t, h = read_data_from_line(line)
+            datetime_values.append(d)
+            temperature.append(t)
+            humidity.append(h)
 
 # create plot layout and plot data from file
+plt.close('all')
 fig, [ax1, ax2] = plt.subplots(nrows=2)
 ax1.set_ylabel('Temperature (°C)')
 ax2.set_ylabel('Humidity (%)')
@@ -98,6 +119,7 @@ for value in [fenster_open, fenster_closed]:
 
 # ax1_abl.plot(datetime_values[:-1], np.diff(np.array(temperature)), color='red')
 # ax2_abl.plot(datetime_values[:-1], np.diff(np.array(humidity)), color='blue')
+<<<<<<< HEAD
 
 
 
@@ -105,5 +127,12 @@ shower_d, shower_t, shower_h, window_d, window_t, window_h = window_status(datet
 
 ax1.scatter(shower_d, shower_t, color='yellow')
 ax1.scatter(window_d, window_t, color='pink')
+=======
+>>>>>>> 4268460e2d4ff3b31e9e9d1ce8b2445493446029
 
+# print(temperature)
+# print(np.diff(temperature))
+
+ax1.hlines(np.mean(temperature), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
+ax2.hlines(np.mean(humidity), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
 plt.show(block=True)
