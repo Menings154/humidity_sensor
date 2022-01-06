@@ -1,3 +1,6 @@
+#TODO das ganze in oop machen
+#TODO zwei modi einfügen, mittels denen sichergestellt wird, dass Fenster wegen Luftfeuchtigkeit nicht auch als Fenster einfach so erkannt wird, schalte zwishcen beide modi, wenn T wieder T_average kreuzt
+
 import numpy as np
 import datetime
 import matplotlib.pyplot as plt
@@ -35,13 +38,19 @@ def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_p
     shower_t = []
     shower_h = []
 
+    t_avrg = []
+    h_avrg = []
+
     for count, value in enumerate(list_d):
-        if len(temp_t) >= 60:
+        if len(temp_t) >= 1000:  # 60:
             temp_t.pop(0)
             temp_h.pop(0)
         
         temp_t.append(list_t[count])
         temp_h.append(list_h[count])
+
+        t_avrg.append(np.mean(temp_t))
+        h_avrg.append(np.mean(temp_h))
         if list_h[count] >= np.mean(temp_h)*h_percentage:  # is humidity rising (indication of showering)
             for i in range(math.ceil(time_after_h/delta_time)):
                 if list_t[count+i] < np.mean(temp_t)*t_percentage:
@@ -58,9 +67,9 @@ def window_status(list_d:list, list_t:list, list_h:list, t_percentage:float, h_p
                     window_opened_t.append(list_t[count])
                     window_opened_h.append(list_h[count])
 
-    return shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h
+    return shower_d, shower_t, shower_h, window_opened_d, window_opened_t, window_opened_h, t_avrg, h_avrg
 
-    
+
 
 datetime_values = []
 temperature = []  # (°C)
@@ -69,7 +78,7 @@ humidity = []  # (%)
 # read the date and time as well as temperature and humidity
 try:
     with open(
-        r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder.csv",
+        r"C:\Users\Benja\Documents\Git\IOT\humidity_sensor\test\Test_how_t_and_h_changes\Bad_Fenster_Reminder2.csv",
         "r",
     ) as file:
         for line in file:
@@ -80,7 +89,7 @@ try:
 
 except FileNotFoundError:
     with open(
-        r"/home/menings/Documents/Git/humidity_sensor/test/Test_how_t_and_h_changes/Bad_Fenster_Reminder.csv",
+        r"/home/menings/Documents/Git/humidity_sensor/test/Test_how_t_and_h_changes/Bad_Fenster_Reminder2.csv",
         "r"
     ) as file:
         for line in file:
@@ -116,10 +125,13 @@ for value in [fenster_open, fenster_closed]:
     ax2.vlines(value, ymin=50, ymax=100, color='black', linestyle='--')
 
 
-shower_d, shower_t, shower_h, window_d, window_t, window_h = window_status(datetime_values, temperature, humidity, 0.9, 1.1, 6000)
+shower_d, shower_t, shower_h, window_d, window_t, window_h, t_avrg, h_avrg = window_status(datetime_values, temperature, humidity, 0.95, 1.3, 6000)
 
 ax1.scatter(shower_d, shower_t, color='yellow')
 ax1.scatter(window_d, window_t, color='pink')
+
+ax1.plot(datetime_values, t_avrg, color='green')
+ax2.plot(datetime_values, h_avrg, color='green')
 
 ax1.hlines(np.mean(temperature), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
 ax2.hlines(np.mean(humidity), xmin=datetime_values[0], xmax=datetime_values[-1], color='black')
